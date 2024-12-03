@@ -70,6 +70,34 @@ describe('Default discriminated union values 2', () => {
 		await validate(data, FormSchema);
 	});
 
+	test('Bad when using default on union schema', async () => {
+		// ! default value on *nested* discriminated union does not work ?
+		const ZodSchema2 = z.object({
+			addresses: z.object({
+				additional: z.discriminatedUnion('type', [
+					z.object({
+						type: z.literal('poBox'),
+						name: z.string().min(1, 'min len').max(10, 'max len')
+					}),
+					z.object({
+						type: z.literal('none')
+					})
+				]).default({
+					type: 'none'
+				})
+			})
+		});
+		const data = {
+			addresses: {
+				additional: {
+					type: 'poBox',
+					name: ''
+				}
+			}
+		} satisfies FormSchema;
+		await validate(data, zod(ZodSchema2));
+	})
+
 	test('Good', async () => {
 		const data = {
 			addresses: {
